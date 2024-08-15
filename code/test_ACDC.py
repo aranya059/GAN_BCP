@@ -19,7 +19,7 @@ parser.add_argument('--root_path', type=str, default='./data/ACDC', help='Name o
 parser.add_argument('--exp', type=str, default='BCP', help='experiment_name')
 parser.add_argument('--model', type=str, default='unet', help='model_name')
 parser.add_argument('--num_classes', type=int,  default=4, help='output channel of network')
-parser.add_argument('--labelnum', type=int, default=7, help='labeled data')
+parser.add_argument('--labelnum', type=int, default=70, help='labeled data')
 parser.add_argument('--stage_name', type=str, default='self_train', help='self or pre')
 
 

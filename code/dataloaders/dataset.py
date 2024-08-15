@@ -36,18 +36,34 @@ class BaseDataSets(Dataset):
 
     def __getitem__(self, idx):
         case = self.sample_list[idx]
+
+        # Construct the file path
         if self.split == "train":
-            h5f = h5py.File(self._base_dir + "/slices/{}.h5".format(case), 'r')
+            file_path = os.path.join(self._base_dir, "slices", case)
         else:
-            h5f = h5py.File(self._base_dir + "/frame_data/{}.h5".format(case), 'r')
+            file_path = os.path.join(self._base_dir, "frame_data", case)
+
+        # Ensure the file path has the correct extension
+        if not file_path.endswith('.h5'):
+            file_path += '.h5'
+
+        # Open the HDF5 file
+        h5f = h5py.File(file_path, 'r')
         image = h5f['image'][:]
         label = h5f['label'][:]
+
+        # Create the sample dictionary
         sample = {'image': image, 'label': label}
+
+        # Apply transformations if in the training split
         if self.split == "train":
             sample = self.transform(sample)
-        # sample["idx"] = idx
+
+        # Add the case name to the sample
         sample['case'] = case
+
         return sample
+
 
 def random_rot_flip(image, label):
     k = np.random.randint(0, 4)

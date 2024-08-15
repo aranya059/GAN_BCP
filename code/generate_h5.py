@@ -3,39 +3,40 @@ import numpy as np
 import h5py
 from PIL import Image
 
-def load_images_to_h5(folder_path, h5_file_path):
-    # Prepare lists to hold image and label data
-    images = []
-    labels = []
+def save_images_to_h5(image_folder, label_folder, output_folder):
+    # Get the list of image and label files
+    image_files = sorted(os.listdir(image_folder))
+    label_files = sorted(os.listdir(label_folder))
 
-    # Read each image and label file
-    num_images = 250  # Adjust based on your actual number of images
-    for i in range(num_images):
-        image_path = os.path.join(folder_path, f'generated_image_{i}.png')
-        label_path = os.path.join(folder_path, f'generated_label_{i}.png')
+    # Ensure the number of images matches the number of labels
+    assert len(image_files) == len(label_files), "The number of images and labels must match."
+
+    for i, (image_file, label_file) in enumerate(zip(image_files, label_files)):
+        # Prepare the paths for the image and label
+        image_path = os.path.join(image_folder, image_file)
+        label_path = os.path.join(label_folder, label_file)
 
         # Open and convert the image to grayscale
         image = Image.open(image_path).convert('L')
         label = Image.open(label_path).convert('L')
 
-        # Convert image and label to numpy arrays and normalize if necessary
+        # Convert image and label to numpy arrays
         image_array = np.array(image) / 255.0  # Normalize to [0, 1] if needed
         label_array = np.array(label)
 
-        images.append(image_array)
-        labels.append(label_array)
+        # Create HDF5 file name
+        h5_file_name = f'{os.path.splitext(image_file)[0]}.h5'
+        h5_file_path = os.path.join(output_folder, h5_file_name)
 
-    # Convert lists to numpy arrays
-    images_np = np.array(images, dtype=np.float64)
-    labels_np = np.array(labels, dtype=np.uint8)
-
-    # Save to HDF5 file
-    with h5py.File(h5_file_path, 'w') as h5file:
-        h5file.create_dataset('image', data=images_np)
-        h5file.create_dataset('label', data=labels_np)
-        print(f"Data saved to {h5_file_path}")
+        # Save to HDF5 file
+        with h5py.File(h5_file_path, 'w') as h5file:
+            h5file.create_dataset('image', data=image_array, dtype=np.float32)
+            h5file.create_dataset('label', data=label_array, dtype=np.uint8)
+            print(f"Data saved to {h5_file_path}")
 
 # Example usage
-folder_path = './generated_images_and_labels_epoch_100'
-h5_file_path = './generated_data_epoch_500.h5'
-load_images_to_h5(folder_path, h5_file_path)
+image_folder = './data/ACDC/g_images'
+label_folder = './data/ACDC/g_masks'
+output_folder = './data/ACDC/Generated_data/Generated_h5'
+os.makedirs(output_folder, exist_ok=True)
+save_images_to_h5(image_folder, label_folder, output_folder)
