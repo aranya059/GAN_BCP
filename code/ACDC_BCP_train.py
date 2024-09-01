@@ -35,7 +35,7 @@ parser.add_argument('--root_path', type=str, default='./data/ACDC', help='Name o
 parser.add_argument('--exp', type=str, default='BCP', help='experiment_name')
 parser.add_argument('--model', type=str, default='unet', help='model_name')
 parser.add_argument('--pre_iterations', type=int, default=10000, help='maximum epoch number to train')
-parser.add_argument('--max_iterations', type=int, default=30000, help='maximum epoch number to train')
+parser.add_argument('--max_iterations', type=int, default=50000, help='maximum epoch number to train')
 parser.add_argument('--batch_size', type=int, default=24, help='batch_size per gpu')
 parser.add_argument('--deterministic', type=int,  default=1, help='whether use deterministic training')
 parser.add_argument('--base_lr', type=float,  default=0.01, help='segmentation network learning rate')
@@ -49,7 +49,7 @@ parser.add_argument('--u_weight', type=float, default=0.5, help='weight of unlab
 # costs
 parser.add_argument('--gpu', type=str,  default='0', help='GPU to use')
 parser.add_argument('--consistency', type=float, default=0.1, help='consistency')
-parser.add_argument('--consistency_rampup', type=float, default=200.0, help='consistency_rampup')
+parser.add_argument('--consistency_rampup', type=float, default=200.0, help='consistency_rampu7p')
 parser.add_argument('--magnitude', type=float,  default='6.0', help='magnitude')
 parser.add_argument('--s_param', type=int,  default=6, help='multinum of random masks')
 

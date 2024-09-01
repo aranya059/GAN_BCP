@@ -83,9 +83,9 @@ def display_images_and_labels_with_overlap(file_path, start_index, end_index):
 
 
 # Specify the path to your HDF5 file
-file_path = './data/ACDC/slices/patient096_frame02_slice_4.h5'
+file_path = './data/2018LA_Seg_Training Set/Generated_data/mri_norm2.h5'
 #file_path = './data/ACDC/frame_data/patient001_frame01.h5'
 explore_h5_file(file_path)
 check_dataset_dtype(file_path)
-display_images_and_labels_with_overlap(file_path, start_index=0, end_index=4)  # Display images and labels from index 10 to 20
+display_images_and_labels_with_overlap(file_path, start_index=50, end_index=54)  # Display images and labels from index 10 to 20
 
