@@ -17,18 +17,22 @@ def normalize_to_uint8(data):
     normalized_data = (data - data_min) / (data_max - data_min) * 255
     return normalized_data.astype(np.uint8)
 
-def extract_images_and_labels(source_dir, image_output_dir, label_output_dir):
+def extract_images_and_labels(source_dir, image_output_dir, label_output_dir, frame_list_file):
     # Ensure the output directories exist
     if not os.path.exists(image_output_dir):
         os.makedirs(image_output_dir)
     if not os.path.exists(label_output_dir):
         os.makedirs(label_output_dir)
 
+    # Read the list of frames from list.txt
+    with open(frame_list_file, 'r') as f:
+        frame_list = [line.strip() for line in f.readlines()]
+
     # List all h5 files in the source directory
-    h5_files = [f for f in os.listdir(source_dir) if f.endswith('.h5')]
+    h5_files = [f for f in os.listdir(source_dir) if f.endswith('.h5') and os.path.splitext(f)[0] in frame_list]
 
     if not h5_files:
-        print("No .h5 files found in the source directory.")
+        print("No matching .h5 files found in the source directory.")
         return
 
     for h5_file in h5_files:
@@ -42,37 +46,33 @@ def extract_images_and_labels(source_dir, image_output_dir, label_output_dir):
                 print(f"'image' or 'label' datasets not found in {h5_file}.")
                 continue
 
-            images = f['image'][:]
-            labels = f['label'][:]
+            image = f['image'][:]
+            label = f['label'][:]
 
-            # Verify the number of images and labels match
-            if images.shape[0] != labels.shape[0]:
-                print(f"Number of images and labels do not match in {h5_file}. Skipping file.")
+            # Normalize to uint8
+            image_uint8 = normalize_to_uint8(image)
+            label_uint8 = normalize_to_uint8(label)
+
+            # Ensure image and label are 2D
+            if image_uint8.ndim != 2 or label_uint8.ndim != 2:
+                print(f"Image or label in {h5_file} is not 2D. Skipping file.")
                 continue
 
-            # Extract and save each image and label
-            for i in range(images.shape[0]):
-                image = images[i]
-                label = labels[i]
+            # Define the output paths
+            base_filename = os.path.splitext(h5_file)[0]
+            image_output_path = os.path.join(image_output_dir, f"{base_filename}_image.png")
+            label_output_path = os.path.join(label_output_dir, f"{base_filename}_label.png")
 
-                # Normalize to uint8
-                image_uint8 = normalize_to_uint8(image)
-                label_uint8 = normalize_to_uint8(label)
+            # Save the image and label using imageio
+            imageio.imwrite(image_output_path, image_uint8)
+            imageio.imwrite(label_output_path, label_uint8)
 
-                # Define the output paths
-                base_filename = f"{os.path.splitext(h5_file)[0]}_{i}"
-                image_output_path = os.path.join(image_output_dir, f"{base_filename}_image.png")
-                label_output_path = os.path.join(label_output_dir, f"{base_filename}_label.png")
-
-                # Save the image and label using imageio
-                imageio.imwrite(image_output_path, image_uint8)
-                imageio.imwrite(label_output_path, label_uint8)
-
-                print(f"Saved image {i} to {image_output_path} and label {i} to {label_output_path}")
+            print(f"Saved image to {image_output_path} and label to {label_output_path}")
 
 # Example usage
-source_dir = './data/ACDC/train_frame'  # Directory containing the h5 files
-image_output_dir = './data/ACDC/e_images'  # Directory where extracted images will be saved
-label_output_dir = './data/ACDC/e_masks'  # Directory where extracted labels will be saved
+source_dir = './data/ACDC/slices_original'  # Directory containing the h5 files
+image_output_dir = './data/ACDC/3e_images'  # Directory where extracted images will be saved
+label_output_dir = './data/ACDC/3e_masks'  # Directory where extracted labels will be saved
+frame_list_file = './data/ACDC/list.txt'  # File containing the list of frame names to process
 
-extract_images_and_labels(source_dir, image_output_dir, label_output_dir)
+extract_images_and_labels(source_dir, image_output_dir, label_output_dir, frame_list_file)

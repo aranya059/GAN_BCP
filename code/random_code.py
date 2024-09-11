@@ -1,41 +1,37 @@
-import os
 import h5py
+import numpy as np
 
-# Path to the text file containing the list of folders
-list_file = './data/train.list'
 
-# Base directory containing the folders listed in list_file
-base_dir = './data/2018LA_Seg_Training Set'
+def print_unique_values(h5_file_path):
+    # Open the HDF5 file
+    with h5py.File(h5_file_path, 'r') as file:
+        # Separate lists for image and mask datasets
+        image_datasets = []
+        mask_datasets = []
 
-# Read the list of folders
-with open(list_file, 'r') as f:
-    folders = [line.strip() for line in f.readlines()]
+        # Identify datasets for images and masks
+        for dataset_name in file.keys():
+            if 'image' in dataset_name.lower():
+                image_datasets.append(dataset_name)
+            elif 'mask' in dataset_name.lower() or 'label' in dataset_name.lower():
+                mask_datasets.append(dataset_name)
 
-# Initialize a counter for the total number of images
-total_images = 0
+        # Print unique pixel values for images
+        print("Unique pixel values for images:")
+        for dataset_name in image_datasets:
+            dataset = file[dataset_name]
+            data = dataset[:]
+            unique_values = np.unique(data)
+            print(f"{dataset_name}: {unique_values}")
 
-# Process the first 8 folders
-for folder in folders[:8]:
-    folder_path = os.path.join(base_dir, folder)
+        # Print unique pixel values for masks
+        print("\nUnique pixel values for masks:")
+        for dataset_name in mask_datasets:
+            dataset = file[dataset_name]
+            data = dataset[:]
+            unique_values = np.unique(data)
+            print(f"{dataset_name}: {unique_values}")
 
-    # Find the .h5 file in the folder
-    h5_file = None
-    for file in os.listdir(folder_path):
-        if file.endswith('.h5'):
-            h5_file = os.path.join(folder_path, file)
-            break
 
-    if h5_file:
-        with h5py.File(h5_file, 'r') as h5f:
-            # Assuming the dataset for images is named 'image'
-            if 'image' in h5f:
-                num_images = h5f['image'].shape[0]
-                print(f'Folder: {folder}, Number of images: {num_images}')
-                total_images += num_images
-            else:
-                print(f'No "image" dataset found in {h5_file}')
-    else:
-        print(f'No .h5 file found in {folder_path}')
-
-# Print the total number of images across the first 8 folders
-print(f'Total number of images across the first 8 folders: {total_images}')
+# Replace 'your_file.h5' with the path to your HDF5 file
+print_unique_values('./data/ACDC/slices/seed0001.h5')

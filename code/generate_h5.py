@@ -1,75 +1,51 @@
+import h5py
 import os
 import numpy as np
-import h5py
 from PIL import Image
+from skimage.transform import resize
 
-def save_images_to_multiple_h5(image_folder, label_folder, output_base_folder, num_splits=20):
-    # Get the list of image and label files
-    image_files = sorted(os.listdir(image_folder))
-    label_files = sorted(os.listdir(label_folder))
+# Define paths
+image_source_folder = "./data/ACDC/3g_images"  # Path where images are saved
+label_source_folder = "./data/ACDC/3g_images_mask"  # Path where labels are saved
+destination_folder = "./data/ACDC/generated_h5/3g_h5"  # Path where h5 files will be saved
 
-    # Ensure the number of images matches the number of labels
-    assert len(image_files) == len(label_files), "The number of images and labels must match."
+# Create the destination directory if it doesn't exist
+os.makedirs(destination_folder, exist_ok=True)
 
-    # Calculate the number of images per split
-    images_per_split = len(image_files) // num_splits
-    remainder = len(image_files) % num_splits
+# List all image and label files
+image_files = sorted([f for f in os.listdir(image_source_folder) if f.endswith(".png")])
+label_files = sorted([f for f in os.listdir(label_source_folder) if f.endswith(".png")])
 
-    # Split the files and save each split in a separate HDF5 file
-    for split_idx in range(num_splits):
-        start_idx = split_idx * images_per_split
-        end_idx = start_idx + images_per_split + (1 if split_idx < remainder else 0)
+# Ensure the number of images and labels match
+assert len(image_files) == len(label_files), "Number of images and labels do not match!"
 
-        # Create the output folder for this split
-        output_folder = os.path.join(output_base_folder, f'g_data_{split_idx + 1}')
-        os.makedirs(output_folder, exist_ok=True)
+# Desired shape for images and labels
+desired_shape = (256, 256)
 
-        # Create the HDF5 file path for this split
-        h5_file_path = os.path.join(output_folder, 'mri_norm2.h5')
+# Function to create a single h5 file for each image and label
+def create_h5_file(image_file, label_file, file_counter):
+    # Load the image and label, convert to grayscale
+    image = Image.open(os.path.join(image_source_folder, image_file)).convert('L')
+    label = Image.open(os.path.join(label_source_folder, label_file)).convert('L')
 
-        # Open the HDF5 file for writing
-        with h5py.File(h5_file_path, 'w') as h5file:
-            # Create datasets with appropriate shapes
-            first_image = np.array(Image.open(os.path.join(image_folder, image_files[start_idx])).convert('L'))
-            first_label = np.array(Image.open(os.path.join(label_folder, label_files[start_idx])).convert('L'))
+    # Convert to numpy arrays and resize
+    image_np = np.array(image).astype(np.float64)
+    label_np = np.array(label).astype(np.uint8)
 
-            images_dataset = h5file.create_dataset('image', (end_idx - start_idx, first_image.shape[0], first_image.shape[1]), dtype=np.float32)
-            labels_dataset = h5file.create_dataset('label', (end_idx - start_idx, first_label.shape[0], first_label.shape[1]), dtype=np.uint8)
+    image_resized = resize(image_np, desired_shape, order=1, preserve_range=True, anti_aliasing=True)
+    label_resized = resize(label_np, desired_shape, order=0, preserve_range=True, anti_aliasing=False).astype(np.uint8)
 
-            # Loop through each image-label pair in this split and store them in the HDF5 file
-            for i, (image_file, label_file) in enumerate(zip(image_files[start_idx:end_idx], label_files[start_idx:end_idx])):
-                # Prepare the paths for the image and label
-                image_path = os.path.join(image_folder, image_file)
-                label_path = os.path.join(label_folder, label_file)
+    # Ensure labels have the correct unique values [0, 1, 2, 3]
+    label_resized = np.clip(label_resized, 0, 1)
 
-                # Open and convert the image to grayscale
-                image = Image.open(image_path).convert('L')
-                label = Image.open(label_path).convert('L')
+    # Create the h5 file
+    h5_filename = os.path.join(destination_folder, f'black_{file_counter}.h5')
+    with h5py.File(h5_filename, 'w') as h5f:
+        h5f.create_dataset('image', data=image_resized)
+        h5f.create_dataset('label', data=label_resized)
 
-                # Convert image and label to numpy arrays
-                image_array = np.array(image) / 255.0  # Normalize to [0, 1] if needed
-                label_array = np.array(label)
+# Process each image and label pair
+for file_counter, (image_file, label_file) in enumerate(zip(image_files, label_files), start=1):
+    create_h5_file(image_file, label_file, file_counter)
 
-                # Store the image and label in the HDF5 datasets
-                images_dataset[i, :, :] = image_array
-                labels_dataset[i, :, :] = label_array
-
-                print(f"Added {image_file} and {label_file} to {h5_file_path}")
-
-        # Reopen the file to count images and labels
-        with h5py.File(h5_file_path, 'r') as h5file:
-            num_images = h5file['image'].shape[0]
-            num_labels = h5file['label'].shape[0]
-            print(f"Total images in {h5_file_path}: {num_images}")
-            print(f"Total labels in {h5_file_path}: {num_labels}")
-
-# Example usage
-image_folder = './data/LA/8g_images'  # Replace with your image folder path
-label_folder = './data/LA/8g_masks'   # Replace with your label folder path
-output_base_folder = './data/LA/Generated_data/'  # Replace with your output base folder path
-
-# Ensure the output directory exists
-os.makedirs(output_base_folder, exist_ok=True)
-
-# Run the function to save images and labels to multiple HDF5 files
-save_images_to_multiple_h5(image_folder, label_folder, output_base_folder, num_splits=20)
+print("H5 file creation complete.")

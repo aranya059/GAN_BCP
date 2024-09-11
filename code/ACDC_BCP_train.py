@@ -44,7 +44,7 @@ parser.add_argument('--seed', type=int,  default=1337, help='random seed')
 parser.add_argument('--num_classes', type=int,  default=4, help='output channel of network')
 # label and unlabel
 parser.add_argument('--labeled_bs', type=int, default=12, help='labeled_batch_size per gpu')
-parser.add_argument('--labelnum', type=int, default=70, help='labeled data')
+parser.add_argument('--labelnum', type=int, default=3, help='labeled data')
 parser.add_argument('--u_weight', type=float, default=0.5, help='weight of unlabeled pixels')
 # costs
 parser.add_argument('--gpu', type=str,  default='0', help='GPU to use')

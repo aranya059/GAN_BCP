@@ -19,7 +19,7 @@ parser.add_argument('--root_path', type=str, default='./data/ACDC', help='Name o
 parser.add_argument('--exp', type=str, default='BCP', help='experiment_name')
 parser.add_argument('--model', type=str, default='unet', help='model_name')
 parser.add_argument('--num_classes', type=int,  default=4, help='output channel of network')
-parser.add_argument('--labelnum', type=int, default=70, help='labeled data')
+parser.add_argument('--labelnum', type=int, default=3, help='labeled data')
 parser.add_argument('--stage_name', type=str, default='self_train', help='self or pre')
 
 
@@ -73,9 +73,9 @@ def test_single_volume(case, net, test_save_path, FLAGS):
     prd_itk.SetSpacing((1, 1, 10))
     lab_itk = sitk.GetImageFromArray(label.astype(np.float32))
     lab_itk.SetSpacing((1, 1, 10))
-    # sitk.WriteImage(prd_itk, test_save_path + case + "_pred.nii.gz")
-    # sitk.WriteImage(img_itk, test_save_path + case + "_img.nii.gz")
-    # sitk.WriteImage(lab_itk, test_save_path + case + "_gt.nii.gz")
+    sitk.WriteImage(prd_itk, test_save_path + case + "_pred.nii.gz")
+    sitk.WriteImage(img_itk, test_save_path + case + "_img.nii.gz")
+    sitk.WriteImage(lab_itk, test_save_path + case + "_gt.nii.gz")
     return first_metric, second_metric, third_metric
 
 

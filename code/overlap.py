@@ -51,10 +51,10 @@ def display_images_and_masks(images_dir, masks_dir, start_index, num_images=5, c
 
 
 if __name__ == "__main__":
-    images_dir = "./data/LA_GAN/gan_train_data/8/e_images"
-    masks_dir = "./data/LA_GAN/gan_train_data/8/e_masks"
+    images_dir = "./data/for_figure/fives_quantitative/original_images"
+    masks_dir = "./data/for_figure/fives_quantitative/unet_gt_10"
     # images_dir = "./Dataset/resized_images"
     # masks_dir = "./Dataset/resized_masks"
-    start_index = 10  # Replace this with the desired start index
+    start_index = 0  # Replace this with the desired start index
 
     display_images_and_masks(images_dir, masks_dir, start_index, colormap='hot', alpha=0.5)
